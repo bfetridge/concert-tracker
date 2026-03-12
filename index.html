@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Chicago Concert Tracker is a personal concert map and log for shows attended or planned at venues around Chicago." />
+  <meta name="theme-color" content="#ffffff" />
+  <title>Chicago Concert Tracker</title>
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div id="map" aria-label="Chicago concert venue map"></div>
+
+  <button id="stats-button" type="button" aria-controls="stats-panel" aria-expanded="false">📊 Stats</button>
+
+  <div id="stats-panel" aria-hidden="true">
+    <div id="stats-card">
+      <div class="stats-header">
+        <div class="stats-title">Concert Stats</div>
+        <button id="stats-close" type="button" aria-label="Close stats panel">✕</button>
+      </div>
+
+      <div class="stats-subrow">
+        <label for="stats-year-select" class="stats-label">Year</label>
+        <select id="stats-year-select"></select>
+      </div>
+
+      <div id="stats-content"></div>
+    </div>
+  </div>
+
+  <div id="upcoming-widget">
+    <div id="upcoming-title">Upcoming Concerts</div>
+    <div id="upcoming-list"></div>
+  </div>
+
+  <details id="panel">
+    <summary>Venues</summary>
+    <div id="panel-content">
+
+      <div class="panel-block">
+        <div class="panel-title">Profile</div>
+        <div class="panel-row">
+          <input id="profile-input" class="panel-input" type="text" placeholder="Email or name (e.g., william@...)" />
+          <button id="profile-btn" class="panel-btn" type="button">Use</button>
+        </div>
+        <div id="profile-active" class="note"></div>
+        <div class="note">
+          Local for now (this device only). Later we’ll swap to real login + database.
+        </div>
+      </div>
+
+      <input id="venue-search" type="text" placeholder="Search venues..." />
+      <div id="venue-list"></div>
+    </div>
+  </details>
+
+  <div id="add-show-panel" aria-hidden="true">
+    <div id="add-show-card">
+      <div class="add-header">
+        <div id="add-venue-title"></div>
+        <button id="add-close" type="button" aria-label="Close add or edit show panel">✕</button>
+      </div>
+
+      <form id="side-add-form">
+        <input id="side-artist" type="text" placeholder="Artist (required)" required />
+        <input id="side-date" type="date" required />
+        <input id="side-price" type="number" min="0" step="1" placeholder="Ticket price" />
+        <input id="side-section" type="text" placeholder="Section / seat" />
+        <input id="side-friends" type="text" placeholder="Who you went with" />
+        <input id="side-rating" type="number" min="1" max="10" placeholder="Rating (1-10)" />
+        <input id="side-setlist" type="url" placeholder="Setlist URL" />
+        <input id="side-poster" type="url" placeholder="Poster URL" />
+        <input id="side-notes" type="text" placeholder="Notes" />
+        <button type="submit">Save show</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
