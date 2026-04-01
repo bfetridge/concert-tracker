@@ -13,9 +13,172 @@
   />
 
   <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.96);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      font-family: Arial, Helvetica, sans-serif;
+      backdrop-filter: blur(6px);
+    }
+
+    .auth-box {
+      width: 340px;
+      max-width: calc(100vw - 32px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 22px;
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.98);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.16);
+    }
+
+    .auth-kicker {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      opacity: 0.65;
+    }
+
+    #auth-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0 0 2px 0;
+    }
+
+    .auth-subtitle {
+      font-size: 13px;
+      line-height: 1.35;
+      opacity: 0.72;
+      margin-bottom: 6px;
+    }
+
+    .auth-box input {
+      width: 100%;
+      padding: 11px 12px;
+      font-size: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.14);
+      outline: none;
+      background: rgba(255,255,255,0.98);
+    }
+
+    .auth-box input:focus {
+      border-color: rgba(0,0,0,0.35);
+    }
+
+    #auth-submit-btn {
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.15);
+      background: rgba(0,0,0,0.06);
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    #auth-submit-btn:hover {
+      background: rgba(0,0,0,0.09);
+    }
+
+    .auth-link-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      min-height: 18px;
+    }
+
+    .auth-link,
+    .auth-toggle {
+      font-size: 12px;
+      color: #1d4ed8;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .auth-link:hover,
+    .auth-toggle:hover {
+      text-decoration: underline;
+    }
+
+    #auth-error {
+      color: #b91c1c;
+      font-size: 12px;
+      line-height: 1.35;
+      min-height: 16px;
+    }
+
+    #logout-btn {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1003;
+      display: none;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.12);
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.16);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    #logout-btn:hover {
+      background: rgba(255,255,255,0.99);
+    }
+
+    @media (max-width: 680px) {
+      .auth-box {
+        padding: 18px;
+      }
+
+      #auth-title {
+        font-size: 22px;
+      }
+
+      #logout-btn {
+        top: 10px;
+        left: 10px;
+      }
+    }
+  </style>
 </head>
 
 <body>
+  <div id="auth-screen">
+    <div class="auth-box">
+      <div class="auth-kicker">Chicago Concert Tracker</div>
+      <h1 id="auth-title">Login</h1>
+      <div class="auth-subtitle">Sign in to access your tracker.</div>
+
+      <input id="email" type="email" placeholder="Email" />
+      <input id="password" type="password" placeholder="Password" />
+      <input id="confirm-password" type="password" placeholder="Confirm password" style="display:none;" />
+
+      <button id="auth-submit-btn" type="button">Login</button>
+
+      <div class="auth-link-row">
+        <div class="auth-toggle" id="auth-toggle">Don't have an account? Sign up</div>
+        <div class="auth-link" id="forgot-password">Forgot password?</div>
+      </div>
+
+      <div id="auth-error"></div>
+    </div>
+  </div>
+
+  <button id="logout-btn" type="button">Log Out</button>
+
   <div id="map" aria-label="Chicago concert venue map"></div>
 
   <button id="stats-button" type="button" aria-controls="stats-panel" aria-expanded="false">📊 Stats</button>
@@ -86,5 +249,159 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
+
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZ-XF5gb1fhfQjtOfniVA4eJazVFN7-LI",
+      authDomain: "chicago-concert-tracker.firebaseapp.com",
+      projectId: "chicago-concert-tracker",
+      storageBucket: "chicago-concert-tracker.firebasestorage.app",
+      messagingSenderId: "693388002044",
+      appId: "1:693388002044:web:f071d98d8b9eff3ad3cd79"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+window.db = db;
+
+    const authScreen = document.getElementById("auth-screen");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const confirmPasswordInput = document.getElementById("confirm-password");
+    const submitBtn = document.getElementById("auth-submit-btn");
+    const toggleBtn = document.getElementById("auth-toggle");
+    const forgotPasswordBtn = document.getElementById("forgot-password");
+    const authTitle = document.getElementById("auth-title");
+    const authSubtitle = document.querySelector(".auth-subtitle");
+    const errorDiv = document.getElementById("auth-error");
+    const logoutBtn = document.getElementById("logout-btn");
+
+    let isSignupMode = false;
+
+    function clearAuthError() {
+      errorDiv.textContent = "";
+    }
+
+    function showAuthError(message) {
+      errorDiv.textContent = message || "";
+    }
+
+    function setAuthMode(signupMode) {
+      isSignupMode = signupMode;
+      clearAuthError();
+
+      if (signupMode) {
+        authTitle.textContent = "Sign Up";
+        authSubtitle.textContent = "Create your account to start tracking concerts.";
+        submitBtn.textContent = "Create Account";
+        confirmPasswordInput.style.display = "block";
+        forgotPasswordBtn.style.display = "none";
+        toggleBtn.textContent = "Already have an account? Login";
+      } else {
+        authTitle.textContent = "Login";
+        authSubtitle.textContent = "Sign in to access your tracker.";
+        submitBtn.textContent = "Login";
+        confirmPasswordInput.style.display = "none";
+        forgotPasswordBtn.style.display = "block";
+        toggleBtn.textContent = "Don't have an account? Sign up";
+      }
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      setAuthMode(!isSignupMode);
+    });
+
+    submitBtn.addEventListener("click", async () => {
+      clearAuthError();
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
+
+      if (!email || !password) {
+        showAuthError("Enter email and password.");
+        return;
+      }
+
+      try {
+        if (isSignupMode) {
+          if (!confirmPassword) {
+            showAuthError("Confirm your password.");
+            return;
+          }
+
+          if (password !== confirmPassword) {
+            showAuthError("Passwords do not match.");
+            return;
+          }
+
+          await createUserWithEmailAndPassword(auth, email, password);
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+      } catch (error) {
+        showAuthError(error.message);
+      }
+    });
+
+    forgotPasswordBtn.addEventListener("click", async () => {
+      clearAuthError();
+
+      const email = emailInput.value.trim();
+
+      if (!email) {
+        showAuthError("Enter your email first.");
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        showAuthError("Password reset email sent.");
+      } catch (error) {
+        showAuthError(error.message);
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      clearAuthError();
+
+      try {
+        await signOut(auth);
+      } catch (error) {
+        showAuthError(error.message);
+      }
+    });
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window.currentUser = user;   // 👈 ADD THIS LINE
+
+    authScreen.style.display = "none";
+    logoutBtn.style.display = "block";
+  } else {
+    window.currentUser = null;   // 👈 ADD THIS LINE
+
+    authScreen.style.display = "flex";
+    logoutBtn.style.display = "none";
+    setAuthMode(false);
+  }
+});
+
+    setAuthMode(false);
+  </script>
 </body>
 </html>
