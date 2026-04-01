@@ -34,7 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
       { name: "Concord Music Hall", coords: [41.9318, -87.7081] },
       { name: "Credit Union 1 Arena", coords: [41.8748, -87.6505] },
       { name: "Auditorium Theatre", coords: [41.8763, -87.6247] },
-      { name: "The Outset", coords: [41.9119, -87.6486] }
+      { name: "The Outset", coords: [41.9119, -87.6486] },
+      { name: "Reggies", coords: [41.8539792, -87.6269125] },
+      { name: "Lollapalooza (Grant Park)", coords: [41.88273, -87.6185578] }
     ];
   
     venues.sort((a, b) => a.name.localeCompare(b.name));
@@ -43,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Profile + local storage
     // ---------------------------
     const PROFILE_KEY = 'ct_active_profile_v1';
-    const DEFAULT_PROFILE = 'william';
+    const DEFAULT_PROFILE = 'default';
   
     function normalizeProfile(p) {
       return (p || '').trim().toLowerCase();
@@ -75,24 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem(storageKeyForShows(profile), JSON.stringify(showsByVenue));
     }
   
-    function cloneSampleShows() {
-      return JSON.parse(JSON.stringify(SAMPLE_SHOWS));
-    }
+    function getOrCreateShows(profile) {
+      const loaded = loadShows(profile);
+      if (loaded) return loaded;
   
-    const SAMPLE_SHOWS = {
-      "The Salt Shed": [
-        { artist: "King Gizzard", date: "2024-09-14", ticketPrice: 65, setlistUrl: "", posterUrl: "" },
-        { artist: "Lupe Fiasco", date: "2024-10-10", ticketPrice: 45, setlistUrl: "", posterUrl: "" }
-      ]
-    };
+      const empty = {};
+      saveShows(profile, empty);
+      return empty;
+    }
   
     let activeProfile = getActiveProfile();
-    let showsByVenue = loadShows(activeProfile);
-  
-    if (!showsByVenue) {
-      showsByVenue = (activeProfile === DEFAULT_PROFILE) ? cloneSampleShows() : {};
-      saveShows(activeProfile, showsByVenue);
-    }
+    let showsByVenue = getOrCreateShows(activeProfile);
   
     // ---------------------------
     // Helpers
@@ -139,6 +134,21 @@ document.addEventListener('DOMContentLoaded', () => {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+    }
+  
+    function sanitizeUrl(value) {
+      const raw = (value || '').trim();
+      if (!raw) return '';
+  
+      try {
+        const url = new URL(raw, window.location.href);
+        if (url.protocol === 'http:' || url.protocol === 'https:') {
+          return url.href;
+        }
+        return '';
+      } catch (e) {
+        return '';
+      }
     }
   
     function getTodayKey() {
@@ -317,10 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return (value || '').trim();
     }
   
-    function cleanOptionalUrl(value) {
-      return (value || '').trim();
-    }
-  
     function parseOptionalWholeNumber(value) {
       if (value === undefined || value === null || value === '') return '';
       const num = Number(value);
@@ -350,6 +356,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
     function buildShowDetailsHtml(show, venueName) {
       const details = [];
+      const safeSetlistUrl = sanitizeUrl(show.setlistUrl);
+      const safePosterUrl = sanitizeUrl(show.posterUrl);
   
       if (show.ticketPrice !== undefined && show.ticketPrice !== null && show.ticketPrice !== '') {
         details.push(`<span class="detail-pill">$${escapeHtml(show.ticketPrice)}</span>`);
@@ -371,9 +379,9 @@ document.addEventListener('DOMContentLoaded', () => {
         details.push(`<span class="detail-pill">Notes: ${escapeHtml(show.notes)}</span>`);
       }
   
-      if (show.setlistUrl && String(show.setlistUrl).trim() !== '') {
+      if (safeSetlistUrl) {
         details.push(
-          `<a class="detail-link popup-action-link" href="${escapeHtml(show.setlistUrl)}" target="_blank" rel="noopener">Setlist</a>`
+          `<a class="detail-link popup-action-link" href="${escapeHtml(safeSetlistUrl)}" target="_blank" rel="noopener">Setlist</a>`
         );
       }
   
@@ -381,10 +389,10 @@ document.addEventListener('DOMContentLoaded', () => {
         `<button class="detail-link find-setlist-btn" type="button" data-show-id="${escapeHtml(show.id)}" data-venue="${escapeHtml(venueName)}">Find Setlist</button>`
       );
   
-      if (show.posterUrl && String(show.posterUrl).trim() !== '') {
+      if (safePosterUrl) {
         details.push(
-          `<a class="detail-link popup-action-link" href="${escapeHtml(show.posterUrl)}" target="_blank" rel="noopener" title="Open poster">
-            <img class="poster-thumb" src="${escapeHtml(show.posterUrl)}" alt="Poster" />
+          `<a class="detail-link popup-action-link" href="${escapeHtml(safePosterUrl)}" target="_blank" rel="noopener" title="Open poster">
+            <img class="poster-thumb" src="${escapeHtml(safePosterUrl)}" alt="Poster" />
           </a>`
         );
       }
@@ -417,9 +425,9 @@ document.addEventListener('DOMContentLoaded', () => {
         listHtml = `<div class="empty-note">No shows added yet.</div>`;
       } else {
         const items = shows
-          .slice()
-          .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-          .map((s) => {
+  .slice()
+  .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+  .map((s) => {
             const artist = escapeHtml(s.artist || '');
             const date = s.date ? escapeHtml(formatDateShort(s.date)) : '';
             const upcoming = isUpcomingShow(s);
@@ -977,11 +985,12 @@ document.addEventListener('DOMContentLoaded', () => {
         section: cleanOptionalText(sideSectionEl.value),
         friends: cleanOptionalText(sideFriendsEl.value),
         rating: parseOptionalRating(sideRatingEl.value),
-        setlistUrl: cleanOptionalUrl(sideSetlistEl.value),
-        posterUrl: cleanOptionalUrl(sidePosterEl.value),
+        setlistUrl: sanitizeUrl(sideSetlistEl.value),
+        posterUrl: sanitizeUrl(sidePosterEl.value),
         notes: cleanOptionalText(sideNotesEl.value)
+        
       };
-  
+ 
       if (!showsByVenue[activeVenueForAdd]) {
         showsByVenue[activeVenueForAdd] = [];
       }
@@ -1034,14 +1043,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
       activeProfile = np;
       setActiveProfile(activeProfile);
-  
-      const loaded = loadShows(activeProfile);
-      if (loaded) {
-        showsByVenue = loaded;
-      } else {
-        showsByVenue = {};
-        saveShows(activeProfile, showsByVenue);
-      }
+      showsByVenue = getOrCreateShows(activeProfile);
   
       ensureShowIds();
       refreshAllPopups();
@@ -1067,4 +1069,5 @@ document.addEventListener('DOMContentLoaded', () => {
     updateProfileUI();
     renderUpcomingWidget();
     renderStatsPanel();
+    
   });
