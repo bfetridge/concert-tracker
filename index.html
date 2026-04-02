@@ -181,6 +181,10 @@
     </div>
   </div>
 
+  <div id="view-mode-banner" style="display:none; position:fixed; top:0; left:0; right:0; background:#1d4ed8; color:white; text-align:center; padding:10px; font-size:13px; font-weight:600; z-index:99998;">
+    You're viewing someone's concert map. &nbsp;<a href="/" style="color:white; text-decoration:underline;">Create your own</a>
+  </div>
+
   <button id="logout-btn" type="button">Log Out</button>
   <div id="global-add-btn" role="button" tabindex="0">+ Add Show</div>
 
@@ -224,6 +228,8 @@
           Local for now (this device only). Later we’ll swap to real login + database.
         </div>
       </div>
+
+      <button id="share-profile-btn" class="panel-btn" type="button" style="width:100%;margin-bottom:10px;font-size:13px;">Share my profile</button>
 
       <input id="venue-search" type="text" placeholder="Search venues..." />
       <div id="venue-list"></div>
@@ -396,6 +402,13 @@ import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/fireb
     });
 
 onAuthStateChanged(auth, (user) => {
+  if (window.isViewMode) {
+    authScreen.style.display = "none";
+    logoutBtn.style.display = "none";
+    document.getElementById('view-mode-banner').style.display = 'block';
+    if (typeof window.initViewMode === 'function') window.initViewMode();
+    return;
+  }
   if (user) {
     window.currentUser = user;
     authScreen.style.display = "none";
