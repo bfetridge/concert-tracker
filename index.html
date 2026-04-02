@@ -178,6 +178,7 @@
   </div>
 
   <button id="logout-btn" type="button">Log Out</button>
+  <button id="global-add-btn" type="button">+ Add Show</button>
 
   <div id="map" aria-label="Chicago concert venue map"></div>
 
@@ -233,6 +234,9 @@
       </div>
 
       <form id="side-add-form">
+        <select id="side-venue" style="display:none; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.15); min-height:42px;">
+          <option value="">Select a venue...</option>
+        </select>
         <input id="side-artist" type="text" placeholder="Artist (required)" required />
         <input id="side-date" type="date" required />
         <input id="side-price" type="number" min="0" step="1" placeholder="Ticket price" />
