@@ -595,43 +595,48 @@ html, body {
   }
   
   @media (max-width: 680px) {
-    #panel {
+    #logout-btn {
       top: 10px;
+      left: 10px;
+    }
+
+    #panel {
+      top: 56px;
       right: 10px;
       left: 10px;
       width: auto;
       max-width: none;
     }
-  
+
     #panel-content {
-      max-height: 45vh;
+      max-height: 40vh;
     }
-  
+
     #stats-button {
       left: 10px;
-      bottom: 182px;
+      bottom: 160px;
     }
-  
+
     #stats-panel {
       left: 10px;
       right: 10px;
-      bottom: 228px;
+      bottom: 206px;
       width: auto;
     }
-  
+
     #stats-card {
       max-height: 34vh;
     }
-  
+
     #upcoming-widget {
       left: 10px;
       right: 10px;
       bottom: 10px;
       width: auto;
     }
-  
+
     #upcoming-list {
-      max-height: 120px;
+      max-height: 100px;
     }
   
     #add-show-panel {
