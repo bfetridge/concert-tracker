@@ -42,52 +42,43 @@ document.addEventListener('DOMContentLoaded', () => {
     venues.sort((a, b) => a.name.localeCompare(b.name));
   
     // ---------------------------
-    // Profile + local storage
+    // Data (loaded from Firestore after login)
     // ---------------------------
-    const PROFILE_KEY = 'ct_active_profile_v1';
-    const DEFAULT_PROFILE = 'default';
-  
-    function normalizeProfile(p) {
-      return (p || '').trim().toLowerCase();
+    let showsByVenue = {};
+
+    function saveShowsToFirestore() {
+      const user = window.currentUser;
+      const db = window.db;
+      if (!user || !db || !window._fs) return;
+      const ref = window._fs.doc(db, 'users', user.uid, 'data', 'shows');
+      window._fs.setDoc(ref, { showsByVenue }).catch(err => {
+        console.error('Failed to save shows:', err);
+      });
     }
-  
-    function getActiveProfile() {
-      const saved = localStorage.getItem(PROFILE_KEY);
-      return normalizeProfile(saved) || DEFAULT_PROFILE;
-    }
-  
-    function setActiveProfile(profile) {
-      localStorage.setItem(PROFILE_KEY, normalizeProfile(profile));
-    }
-  
-    function storageKeyForShows(profile) {
-      return `ct_shows_${normalizeProfile(profile)}_v1`;
-    }
-  
-    function loadShows(profile) {
+
+    window.onUserLogin = async function(user) {
+      const db = window.db;
+      if (!db || !window._fs) return;
       try {
-        const raw = localStorage.getItem(storageKeyForShows(profile));
-        return raw ? JSON.parse(raw) : null;
-      } catch (e) {
-        return null;
+        const ref = window._fs.doc(db, 'users', user.uid, 'data', 'shows');
+        const snap = await window._fs.getDoc(ref);
+        showsByVenue = snap.exists() ? (snap.data().showsByVenue || {}) : {};
+      } catch (err) {
+        console.error('Failed to load shows:', err);
+        showsByVenue = {};
       }
-    }
-  
-    function saveShows(profile, showsByVenue) {
-      localStorage.setItem(storageKeyForShows(profile), JSON.stringify(showsByVenue));
-    }
-  
-    function getOrCreateShows(profile) {
-      const loaded = loadShows(profile);
-      if (loaded) return loaded;
-  
-      const empty = {};
-      saveShows(profile, empty);
-      return empty;
-    }
-  
-    let activeProfile = getActiveProfile();
-    let showsByVenue = getOrCreateShows(activeProfile);
+      ensureShowIds();
+      refreshAllPopups();
+      renderUpcomingWidget();
+      renderStatsPanel();
+    };
+
+    window.onUserLogout = function() {
+      showsByVenue = {};
+      refreshAllPopups();
+      renderUpcomingWidget();
+      renderStatsPanel();
+    };
   
     // ---------------------------
     // Helpers
@@ -110,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   
       if (changed) {
-        saveShows(activeProfile, showsByVenue);
+        saveShowsToFirestore();
       }
     }
   
@@ -919,7 +910,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
         showsByVenue[venueName] = (showsByVenue[venueName] || []).filter(existingShow => existingShow.id !== showId);
         removeVenueIfEmpty(venueName);
-        saveShows(activeProfile, showsByVenue);
+        saveShowsToFirestore();
         refreshVenuePopup(venueName, reopenYear, true);
         renderUpcomingWidget();
         renderStatsPanel();
@@ -1013,7 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
   
-      saveShows(activeProfile, showsByVenue);
+      saveShowsToFirestore();
   
       const savedYear = date ? date.slice(0, 4) : null;
       const defaultYear = getDefaultYearForVenue(activeVenueForAdd);
@@ -1025,49 +1016,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeAddPanel();
     });
   
-    // ---------------------------
-    // Profile UI wiring
-    // ---------------------------
-    const profileInputEl = document.getElementById('profile-input');
-    const profileBtnEl = document.getElementById('profile-btn');
-    const profileActiveEl = document.getElementById('profile-active');
-  
-    function updateProfileUI() {
-      profileInputEl.value = activeProfile;
-      profileActiveEl.innerHTML = `Active: <strong>${escapeHtml(activeProfile)}</strong>`;
-    }
-  
-    function switchProfile(newProfileRaw) {
-      const np = normalizeProfile(newProfileRaw);
-      if (!np) return;
-  
-      activeProfile = np;
-      setActiveProfile(activeProfile);
-      showsByVenue = getOrCreateShows(activeProfile);
-  
-      ensureShowIds();
-      refreshAllPopups();
-      renderUpcomingWidget();
-      renderStatsPanel();
-      updateProfileUI();
-      closeAddPanel();
-      closeStatsPanel();
-      closeVenuePanel();
-    }
-  
-    profileBtnEl.addEventListener('click', () => {
-      switchProfile(profileInputEl.value);
-    });
-  
-    profileInputEl.addEventListener('keydown', (evt) => {
-      if (evt.key === 'Enter') {
-        evt.preventDefault();
-        switchProfile(profileInputEl.value);
-      }
-    });
-  
-    updateProfileUI();
     renderUpcomingWidget();
     renderStatsPanel();
-    
+
   });
