@@ -645,6 +645,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const sideForm = document.getElementById('side-add-form');
     const sideSubmitBtn = sideForm.querySelector('button[type="submit"]');
   
+    const sideVenueEl = document.getElementById('side-venue');
+
+    venues.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = v.name;
+      sideVenueEl.appendChild(opt);
+    });
+
     const sideArtistEl = document.getElementById('side-artist');
     const sideDateEl = document.getElementById('side-date');
     const sidePriceEl = document.getElementById('side-price');
@@ -665,17 +674,29 @@ document.addEventListener('DOMContentLoaded', () => {
       activeVenueForAdd = null;
       activeEditShowId = null;
       sideSubmitBtn.textContent = 'Save show';
+      sideVenueEl.style.display = 'none';
+      sideVenueEl.value = '';
     }
-  
+
     function openAddPanel(venueName) {
       resetSideForm();
       activeVenueForAdd = venueName;
       addVenueTitle.textContent = `Add show • ${venueName}`;
       sideSubmitBtn.textContent = 'Save show';
+      sideVenueEl.style.display = 'none';
       closeStatsPanel();
       closeVenuePanel();
       setAddPanelState(true);
       sideArtistEl.focus();
+    }
+
+    function openAddPanelGlobal() {
+      resetSideForm();
+      addVenueTitle.textContent = 'Add Show';
+      sideVenueEl.style.display = '';
+      closeStatsPanel();
+      closeVenuePanel();
+      setAddPanelState(true);
     }
   
     function openEditPanel(showId) {
@@ -713,6 +734,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   
     addCloseBtn.addEventListener('click', closeAddPanel);
+
+    document.getElementById('global-add-btn').addEventListener('click', () => {
+      openAddPanelGlobal();
+    });
   
     // ---------------------------
     // Stats panel
@@ -962,13 +987,14 @@ document.addEventListener('DOMContentLoaded', () => {
     sideForm.addEventListener('submit', (evt) => {
       evt.preventDefault();
   
-      if (!activeVenueForAdd) return;
-  
+      const venueToUse = activeVenueForAdd || sideVenueEl.value;
+      if (!venueToUse) return;
+
       const artist = cleanOptionalText(sideArtistEl.value);
       const date = sideDateEl.value;
-  
+
       if (!artist || !date) return;
-  
+
       const showPayload = {
         artist,
         date,
@@ -979,38 +1005,33 @@ document.addEventListener('DOMContentLoaded', () => {
         setlistUrl: sanitizeUrl(sideSetlistEl.value),
         posterUrl: sanitizeUrl(sidePosterEl.value),
         notes: cleanOptionalText(sideNotesEl.value)
-        
       };
- 
-      if (!showsByVenue[activeVenueForAdd]) {
-        showsByVenue[activeVenueForAdd] = [];
+
+      if (!showsByVenue[venueToUse]) {
+        showsByVenue[venueToUse] = [];
       }
-  
+
       if (activeEditShowId) {
-        showsByVenue[activeVenueForAdd] = showsByVenue[activeVenueForAdd].map(show => {
+        showsByVenue[venueToUse] = showsByVenue[venueToUse].map(show => {
           if (show.id === activeEditShowId) {
-            return {
-              ...show,
-              ...showPayload,
-              id: show.id
-            };
+            return { ...show, ...showPayload, id: show.id };
           }
           return show;
         });
       } else {
-        showsByVenue[activeVenueForAdd].push({
+        showsByVenue[venueToUse].push({
           id: makeShowId(),
           ...showPayload
         });
       }
-  
+
       saveShowsToFirestore();
-  
+
       const savedYear = date ? date.slice(0, 4) : null;
-      const defaultYear = getDefaultYearForVenue(activeVenueForAdd);
+      const defaultYear = getDefaultYearForVenue(venueToUse);
       const reopenYear = savedYear && savedYear === defaultYear ? savedYear : defaultYear;
-  
-      refreshVenuePopup(activeVenueForAdd, reopenYear, true);
+
+      refreshVenuePopup(venueToUse, reopenYear, true);
       renderUpcomingWidget();
       renderStatsPanel();
       closeAddPanel();
