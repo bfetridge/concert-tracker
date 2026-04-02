@@ -117,6 +117,30 @@
       min-height: 16px;
     }
 
+    #share-profile-btn {
+      position: fixed;
+      bottom: 64px;
+      right: 16px;
+      top: auto;
+      left: auto;
+      z-index: 1003;
+      display: none;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.12);
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.16);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #share-profile-btn:hover {
+      background: rgba(255,255,255,0.99);
+    }
+
     #logout-btn {
       position: fixed;
       bottom: 16px;
@@ -185,6 +209,7 @@
     You're viewing someone's concert map. &nbsp;<a href="/" style="color:white; text-decoration:underline;">Create your own</a>
   </div>
 
+  <button id="share-profile-btn" type="button">Share my profile</button>
   <button id="logout-btn" type="button">Log Out</button>
   <div id="global-add-btn" role="button" tabindex="0">+ Add Show</div>
 
@@ -228,8 +253,6 @@
           Local for now (this device only). Later we’ll swap to real login + database.
         </div>
       </div>
-
-      <button id="share-profile-btn" class="panel-btn" type="button" style="width:100%;margin-bottom:10px;font-size:13px;">Share my profile</button>
 
       <input id="venue-search" type="text" placeholder="Search venues..." />
       <div id="venue-list"></div>
@@ -413,11 +436,13 @@ onAuthStateChanged(auth, (user) => {
     window.currentUser = user;
     authScreen.style.display = "none";
     logoutBtn.style.display = "block";
+    document.getElementById('share-profile-btn').style.display = 'block';
     if (typeof window.onUserLogin === 'function') window.onUserLogin(user);
   } else {
     window.currentUser = null;
     authScreen.style.display = "flex";
     logoutBtn.style.display = "none";
+    document.getElementById('share-profile-btn').style.display = 'none';
     setAuthMode(false);
     if (typeof window.onUserLogout === 'function') window.onUserLogout();
   }
