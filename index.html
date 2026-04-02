@@ -208,7 +208,7 @@
     <summary>Venues</summary>
     <div id="panel-content">
 
-      <div class="panel-block">
+      <div class="panel-block" style="display:none;">
         <div class="panel-title">Profile</div>
         <div class="panel-row">
           <input id="profile-input" class="panel-input" type="text" placeholder="Email or name (e.g., william@...)" />
@@ -262,7 +262,7 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAZ-XF5gb1fhfQjtOfniVA4eJazVFN7-LI",
@@ -276,7 +276,8 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/12.11.0/firebas
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-window.db = db;
+    window.db = db;
+    window._fs = { doc, getDoc, setDoc };
 
     const authScreen = document.getElementById("auth-screen");
     const emailInput = document.getElementById("email");
@@ -388,16 +389,16 @@ window.db = db;
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    window.currentUser = user;   // 👈 ADD THIS LINE
-
+    window.currentUser = user;
     authScreen.style.display = "none";
     logoutBtn.style.display = "block";
+    if (typeof window.onUserLogin === 'function') window.onUserLogin(user);
   } else {
-    window.currentUser = null;   // 👈 ADD THIS LINE
-
+    window.currentUser = null;
     authScreen.style.display = "flex";
     logoutBtn.style.display = "none";
     setAuthMode(false);
+    if (typeof window.onUserLogout === 'function') window.onUserLogout();
   }
 });
 
