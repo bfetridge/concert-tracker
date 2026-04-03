@@ -135,6 +135,138 @@
       min-height: 16px;
     }
 
+    #friends-btn {
+      position: fixed;
+      bottom: 112px;
+      right: 16px;
+      top: auto;
+      left: auto;
+      z-index: 1003;
+      display: none;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.12);
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.16);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #friends-btn:hover {
+      background: rgba(255,255,255,0.99);
+    }
+
+    #friends-panel {
+      position: fixed;
+      bottom: 168px;
+      right: 16px;
+      z-index: 1004;
+      width: 300px;
+      max-width: calc(100vw - 32px);
+      background: rgba(255,255,255,0.98);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 16px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.16);
+      padding: 16px;
+      display: none;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .friends-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .friends-title {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    #friends-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0.5;
+      padding: 0;
+    }
+
+    #friends-close:hover { opacity: 1; }
+
+    .friend-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .friend-name {
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .friend-name:hover { text-decoration: underline; }
+
+    .friend-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      opacity: 0.35;
+      padding: 2px 6px;
+    }
+
+    .friend-remove:hover { opacity: 1; }
+
+    .friends-empty {
+      font-size: 13px;
+      opacity: 0.5;
+      padding: 6px 0 10px;
+    }
+
+    .friends-add {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .friends-add input {
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.14);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .friends-add input:focus { border-color: rgba(0,0,0,0.35); }
+
+    .friends-add button {
+      padding: 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.15);
+      background: rgba(0,0,0,0.06);
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .friends-add button:hover { background: rgba(0,0,0,0.09); }
+
+    #friends-error {
+      font-size: 12px;
+      color: #b91c1c;
+      min-height: 16px;
+      margin-top: 4px;
+    }
+
     #share-profile-btn {
       position: fixed;
       bottom: 64px;
@@ -191,6 +323,17 @@
         font-size: 22px;
       }
 
+      #friends-btn {
+        bottom: 210px;
+        right: 10px;
+      }
+
+      #friends-panel {
+        bottom: 266px;
+        right: 10px;
+        width: calc(100vw - 20px);
+      }
+
       #share-profile-btn {
         bottom: 160px;
         right: 10px;
@@ -230,6 +373,22 @@
 
   <div id="view-mode-banner" style="display:none; position:fixed; top:0; left:0; right:0; background:#1d4ed8; color:white; text-align:center; padding:10px; font-size:13px; font-weight:600; z-index:99998;">
     You're viewing someone's concert map. &nbsp;<a href="/" style="color:white; text-decoration:underline;">Create your own</a>
+  </div>
+
+  <button id="friends-btn" type="button">Friends</button>
+
+  <div id="friends-panel">
+    <div class="friends-header">
+      <div class="friends-title">Friends</div>
+      <button id="friends-close" type="button">✕</button>
+    </div>
+    <div id="friends-list"></div>
+    <div class="friends-add">
+      <input id="friends-nickname" type="text" placeholder="Nickname (e.g. Mike)" />
+      <input id="friends-url" type="text" placeholder="Paste their share link" />
+      <button id="friends-add-btn" type="button">Add Friend</button>
+    </div>
+    <div id="friends-error"></div>
   </div>
 
   <button id="share-profile-btn" type="button">Share my profile</button>
