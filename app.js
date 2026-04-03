@@ -254,15 +254,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   
     function buildSetlistSearchUrl(show, venueName) {
-      const parts = [
-        show.artist || '',
-        venueName || '',
-        show.date || '',
-        'setlist.fm'
-      ].filter(Boolean);
-  
+      const parts = [show.artist || '', show.date || ''].filter(Boolean);
       const query = parts.join(' ');
-      return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+      return `https://www.setlist.fm/search?query=${encodeURIComponent(query)}`;
     }
   
     function getUpcomingShows() {
