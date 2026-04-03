@@ -665,8 +665,16 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
   
+    const sphereIcon = L.divIcon({
+      html: '<div style="font-size:28px;line-height:1;">🔮</div>',
+      className: '',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
+    });
+
     venues.forEach(v => {
-      const marker = L.marker(v.coords).addTo(map);
+      const icon = v.name === 'The Sphere (Las Vegas)' ? sphereIcon : undefined;
+      const marker = L.marker(v.coords, icon ? { icon } : {}).addTo(map);
       markersByName[v.name] = marker;
   
       refreshVenuePopup(v.name, null, false);
