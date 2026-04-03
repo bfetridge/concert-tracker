@@ -657,8 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   
-    const bounds = L.latLngBounds(venues.filter(v => !v.outOfRegion).map(v => v.coords));
-    map.fitBounds(bounds, { padding: [30, 30] });
+    map.setView([41.8827, -87.6233], 13);
   
     // ---------------------------
     // Add / Edit Side Panel
