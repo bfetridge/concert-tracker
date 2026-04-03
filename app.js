@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Data (loaded from Firestore after login)
     // ---------------------------
     let showsByVenue = {};
+    let friendsList = [];
 
     function saveShowsToFirestore() {
       const user = window.currentUser;
@@ -63,6 +64,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const ref = window._fs.doc(db, 'users', user.uid, 'data', 'shows');
       window._fs.setDoc(ref, { showsByVenue }).catch(err => {
         console.error('Failed to save shows:', err);
+      });
+    }
+
+    function saveFriendsToFirestore() {
+      const user = window.currentUser;
+      const db = window.db;
+      if (!user || !db || !window._fs) return;
+      const ref = window._fs.doc(db, 'users', user.uid, 'data', 'friends');
+      window._fs.setDoc(ref, { friendsList }).catch(err => {
+        console.error('Failed to save friends:', err);
       });
     }
 
@@ -77,17 +88,29 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Failed to load shows:', err);
         showsByVenue = {};
       }
+      try {
+        const ref = window._fs.doc(db, 'users', user.uid, 'data', 'friends');
+        const snap = await window._fs.getDoc(ref);
+        friendsList = snap.exists() ? (snap.data().friendsList || []) : [];
+      } catch (err) {
+        friendsList = [];
+      }
       ensureShowIds();
       refreshAllPopups();
       renderUpcomingWidget();
       renderStatsPanel();
+      document.getElementById('friends-btn').style.display = 'block';
+      renderFriendsList();
     };
 
     window.onUserLogout = function() {
       showsByVenue = {};
+      friendsList = [];
       refreshAllPopups();
       renderUpcomingWidget();
       renderStatsPanel();
+      document.getElementById('friends-btn').style.display = 'none';
+      document.getElementById('friends-panel').style.display = 'none';
     };
 
     window.initViewMode = async function() {
@@ -1096,5 +1119,81 @@ document.addEventListener('DOMContentLoaded', () => {
   
     renderUpcomingWidget();
     renderStatsPanel();
+
+    // ---------------------------
+    // Friends panel
+    // ---------------------------
+    const friendsBtn = document.getElementById('friends-btn');
+    const friendsPanel = document.getElementById('friends-panel');
+    const friendsClose = document.getElementById('friends-close');
+    const friendsAddBtn = document.getElementById('friends-add-btn');
+    const friendsNicknameEl = document.getElementById('friends-nickname');
+    const friendsUrlEl = document.getElementById('friends-url');
+    const friendsErrorEl = document.getElementById('friends-error');
+
+    function renderFriendsList() {
+      const listEl = document.getElementById('friends-list');
+      if (!listEl) return;
+      if (!friendsList.length) {
+        listEl.innerHTML = '<div class="friends-empty">No friends added yet.</div>';
+        return;
+      }
+      listEl.innerHTML = friendsList.map(f => `
+        <div class="friend-item">
+          <span class="friend-name" data-uid="${escapeHtml(f.uid)}">${escapeHtml(f.nickname)}</span>
+          <button class="friend-remove" data-id="${escapeHtml(f.id)}">Remove</button>
+        </div>
+      `).join('');
+    }
+
+    friendsBtn.addEventListener('click', () => {
+      const isOpen = friendsPanel.style.display === 'block';
+      friendsPanel.style.display = isOpen ? 'none' : 'block';
+    });
+
+    friendsClose.addEventListener('click', () => {
+      friendsPanel.style.display = 'none';
+    });
+
+    document.getElementById('friends-list').addEventListener('click', (evt) => {
+      const nameEl = evt.target.closest('.friend-name');
+      if (nameEl) {
+        const uid = nameEl.dataset.uid;
+        window.location.href = `/?view=${uid}`;
+        return;
+      }
+      const removeBtn = evt.target.closest('.friend-remove');
+      if (removeBtn) {
+        const id = removeBtn.dataset.id;
+        friendsList = friendsList.filter(f => f.id !== id);
+        saveFriendsToFirestore();
+        renderFriendsList();
+      }
+    });
+
+    friendsAddBtn.addEventListener('click', () => {
+      friendsErrorEl.textContent = '';
+      const nickname = friendsNicknameEl.value.trim();
+      const raw = friendsUrlEl.value.trim();
+      if (!nickname) { friendsErrorEl.textContent = 'Enter a nickname.'; return; }
+      if (!raw) { friendsErrorEl.textContent = 'Paste their share link.'; return; }
+
+      let uid = null;
+      try {
+        const url = new URL(raw);
+        uid = url.searchParams.get('view');
+      } catch(e) {
+        if (raw.length > 10 && !raw.includes(' ')) uid = raw;
+      }
+
+      if (!uid) { friendsErrorEl.textContent = 'Invalid link — paste the full share URL.'; return; }
+      if (friendsList.some(f => f.uid === uid)) { friendsErrorEl.textContent = 'Already added.'; return; }
+
+      friendsList.push({ id: makeShowId(), nickname, uid });
+      saveFriendsToFirestore();
+      renderFriendsList();
+      friendsNicknameEl.value = '';
+      friendsUrlEl.value = '';
+    });
 
   });
