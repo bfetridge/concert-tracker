@@ -561,7 +561,14 @@ document.addEventListener('DOMContentLoaded', () => {
   
       const stats = computeYearStats(statsSelectedYear);
       const venueBreakdown = getVenueBreakdownForYear(statsSelectedYear);
-      const totalText = `$${stats.totalSpent}`;
+      const totalText = `$${stats.totalSpent.toLocaleString()}`;
+
+      const upcomingShows = getUpcomingShows();
+      const upcomingSpent = upcomingShows
+        .map(s => s.ticketPrice)
+        .filter(p => p !== undefined && p !== null && p !== '' && !Number.isNaN(Number(p)))
+        .reduce((sum, p) => sum + Number(p), 0);
+      const upcomingSpentText = `$${upcomingSpent.toLocaleString()}`;
   
       let attendedListHtml = '';
       if (statsShowsExpanded) {
@@ -622,6 +629,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="stats-row-top">
               <div class="stats-row-label">Total Spent</div>
               <div class="stats-row-value">${totalText}</div>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stats-row-top">
+              <div class="stats-row-label">Upcoming Spend</div>
+              <div class="stats-row-value">${upcomingSpentText}</div>
             </div>
           </div>
         </div>
