@@ -43,7 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
       { name: "Auditorium Theatre", coords: [41.8763, -87.6247] },
       { name: "The Outset", coords: [41.9119, -87.6486] },
       { name: "Reggies", coords: [41.8539792, -87.6269125] },
-      { name: "Lollapalooza (Grant Park)", coords: [41.88273, -87.6185578] }
+      { name: "Lollapalooza (Grant Park)", coords: [41.88273, -87.6185578] },
+      { name: "Credit Union 1 Amphitheatre", coords: [41.5694, -87.7873] },
+      { name: "Winnetka Music Festival", coords: [42.1081, -87.7394] },
+      { name: "The Sphere (Las Vegas)", coords: [36.1219, -115.1639], outOfRegion: true }
     ];
   
     venues.sort((a, b) => a.name.localeCompare(b.name));
@@ -654,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   
-    const bounds = L.latLngBounds(venues.map(v => v.coords));
+    const bounds = L.latLngBounds(venues.filter(v => !v.outOfRegion).map(v => v.coords));
     map.fitBounds(bounds, { padding: [30, 30] });
   
     // ---------------------------
